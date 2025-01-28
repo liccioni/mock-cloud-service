@@ -2,10 +2,19 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.2'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.github.jmongard.git-semver-plugin' version '0.4.2'
+    id 'com.adarshr.test-logger' version '3.0.0'
 }
 
+def publishToDocker = Boolean.parseBoolean(System.getenv().getOrDefault('PUBLISH_TO_DOCKER', 'false'))
+def dockerUsername = System.getenv().getOrDefault('DOCKER_USERNAME', 'user')
+def dockerPassword = System.getenv().getOrDefault('DOCKER_PASSWORD', 'pass')
+def appVersion = System.getenv().getOrDefault('APP_VERSION', '0.0.1-SNAPSHOT')
+def gitHash = System.getenv().getOrDefault('GIT_HASH', '123456')
+
+
 group = 'net.liccioni'
-version = '0.0.1-SNAPSHOT'
+version = semver.version as String
 
 java {
     toolchain {
@@ -54,4 +63,36 @@ dependencyManagement {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+bootBuildImage {
+    imageName = "ghcr.io/liccioni/mock-cloud-service"
+    publish = publishToDocker
+    tags = ["ghcr.io/liccioni/mock-cloud-service:${semver.version}"]
+    docker {
+        publishRegistry {
+            username = dockerUsername
+            password = dockerPassword
+        }
+    }
+    buildCache {
+        volume {
+            name = "cache-${rootProject.name}.build"
+        }
+    }
+    launchCache {
+        volume {
+            name = "cache-${rootProject.name}.launch"
+        }
+    }
+}
+
+task getCurrentVersion {
+    doFirst {
+        println "${semver.version}"
+    }
+}
+
+testlogger {
+    theme 'mocha'
 }
