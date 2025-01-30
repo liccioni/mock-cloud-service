@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: mock-cloud-service
+  cloud:
+    function:
+      definition: echoServiceInput
+    stream:
+      bindings:
+        echo-service-send:
+          destination: mock_cloud_service.echo.in.topic
+        echo-service-output:
+          destination: mock_cloud_service.echo.out.topic
+        echoServiceInput-in-0:
+          destination: mock_cloud_service.echo.in.topic
+          group: mock-cloud-service-consumer
+  rabbitmq:
+    username: ${RABBIT_USERNAME:guest}
+    password: ${RABBIT_PASSWORD:guest}
+    host: ${RABBIT_HOST:localhost}
